@@ -1,15 +1,8 @@
 ---
-// Ya no necesitamos importar Image de astro:assets
-
-// 1. Cargamos las imágenes con eager: true para obtener los datos de inmediato
 const images = import.meta.glob<{ default: ImageMetadata }>('../assets/images/*', { eager: true });
-
-// Debug para ver si las encuentra (mira la terminal de VS Code)
-console.log("Rutas encontradas:", Object.keys(images));
-
-// 2. Extraemos los valores en un array para iterar
 const imageList = Object.values(images);
 ---
+
 <dialog id="image-modal">
     <div class="modal-content">
       <button id="close-modal" aria-label="Cerrar">X</button>
@@ -17,7 +10,7 @@ const imageList = Object.values(images);
     </div>
 </dialog>
 
-<section class="carrusel">
+<section class="carrusel" id="galeria-section">
   <div class="scroll-container" id="gallery-wrapper">
     {
       imageList.map((img, index) => (
@@ -32,222 +25,165 @@ const imageList = Object.values(images);
       ))
     }
   </div>
+
+  <div class="footer-title-container">
+    <h2 id="hermes-footer">HERMES</h2>
+  </div>
 </section>
 
 <style>
-    .carrusel{
+    .carrusel {
+        position: relative;
+        z-index: 20;
         display: flex;
-        height: 40dvh;
-        transform: translateY(-90px);
-        opacity: 0;
-        z-index:0;
+        overflow: hidden;
+        min-height: 100vh;
         flex-direction: column;
-    }
-    .carrusel:hover{
-        opacity: 1;
-        z-index:100;
-    }
-    .carrusel h2{
-        margin-left:10px;
-        font-family:'PlayFair';
-        text-decoration: underline;
-        font-size: clamp(0.75rem, 0.5577rem + 1.0256vw, 1.25rem);
+        background-color: #1E1E1E;
     }
 
-  .scroll-container {
-    width: 100%;
-    display: flex;
-    overflow-x: auto;
-    cursor: ew-resize;
-    white-space: nowrap;
-    scrollbar-width: none;
-    scroll-behavior: smooth;
-  }
-
-  .scroll-container::-webkit-scrollbar {
-    display: none; /* Oculta scrollbar en Chrome/Safari */
-  }
-
-  .img-card {
-    flex: 0 0 auto;
-    width: 20%;
-    overflow: hidden;
-  }
-
-  .img-card img {
-    width: 100%;
-    height: 100%;
-    cursor:pointer;
-    object-fit: cover;
-    transition: transform 0.3s ease;
-  }
-
-  .img-card:hover img {
-    transform: scale(1.05);
-  }
-
-  @media screen and (max-width: 1166px) {
-    .carrusel{
-        opacity: 1;
-        cursor:none;
-        transform: translateY(0);
+    .footer-title-container {
+        position: absolute;
+        bottom: 40px;
+        right: 5vw;
+        z-index: 100;
+        pointer-events: none;
     }
-    .carrusel:hover{
-        all: unset;
+
+    #hermes-footer {
+        font-family: 'Akira', sans-serif;
+        color: #fff;
+        margin: 0;
+        font-size: clamp(1.5rem, 4vw, 3rem);
+        text-transform: uppercase;
+        white-space: nowrap;
+        /* Estado inicial para la animación de entrada */
+        transform: translateX(150%);
+        opacity: 0;
+        display: block;
+        will-change: transform, opacity;
     }
+
     .scroll-container {
-    display: flex;
-    flex-direction: column;
-    height: max-content;
-    overflow-x: auto;
-    gap: 15px;
-    padding:8px;
-    scroll-behavior: smooth;
-
-    white-space: nowrap;
-    cursor: pointer;
-    border-radius: 0;
-
-    /* --- ACTIVAR SCROLL INTERNO --- */
-    height: 35dvh;      /* El contenedor ocupa toda la pantalla */
-    overflow-y: auto;    /* Permite el scroll vertical si el contenido excede el alto */
-    overflow-x: hidden;  /* Evita el scroll horizontal molesto */
-
-    /* Opcional: para que el scroll sea suave */
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch; /* Suavidad extra en iPhones */ 
-    }
-
-    .img-card {
-        position: sticky;
-        top: 0;
-        height: 100%; /* Ocupa toda la pantalla para que la siguiente tarde en llegar */
         width: 100%;
         display: flex;
-        align-items: center;
-        justify-content: center;
+        overflow-x: auto;
+        cursor: ew-resize;
+        white-space: nowrap;
+        scrollbar-width: none;
+        padding: 5vh 0;
+        scroll-behavior: auto; /* Importante: GSAP maneja la suavidad */
+    }
+
+    .scroll-container::-webkit-scrollbar { display: none; }
+
+    .img-card {
+        flex: 0 0 auto;
+        width: 25%;
+        height: 70vh;
+        margin: 0 15px;
+        overflow: hidden;
     }
 
     .img-card img {
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .img-card:hover img { transform: scale(1.05); }
+
+    /* Modal Styles */
+    #image-modal {
+        background: rgba(16, 24, 40, 0.95);
+        border: none;
+        width: 100%;
+        height: 100%;
         max-width: 100%;
         max-height: 100%;
-        margin-bottom:100px;
-        object-fit: contain; /* Muestra la imagen completa sin recortar */
-    }
-    
-    .img-card:nth-child(2n) {
-        top: 0px;
-    }
-    
-    .img-child:nth-child(even) {
-        top: 70px;
-        transform: scale(1.3);
+        padding: 0;
     }
 
-    .img-card:nth-child(3n) {
-        top: 80px;
-        transform: scale(1.2);
+    .modal-content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
     }
 
-    .img-card:nth-child(4n) {
-    top: 15px;
+    #modal-img { max-width: 90%; max-height: 90%; object-fit: contain; }
+
+    #close-modal {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: 2px solid #fff;
+        color: #fff;
+        padding: 5px 15px;
+        cursor: pointer;
     }
-  }
+
+    @media screen and (max-width: 1166px) {
+        .scroll-container { flex-direction: column; padding: 20px; }
+        .img-card { width: 100%; height: 50vh; margin: 0 0 20px 0; }
+    }
 </style>
 
 <script>
-  // 1. SELECCIÓN DE ELEMENTOS
-  const container = document.getElementById('gallery-wrapper') as HTMLElement;
-  const modal = document.getElementById('image-modal') as HTMLDialogElement;
-  const modalImg = document.getElementById('modal-img') as HTMLImageElement;
-  const closeBtn = document.getElementById('close-modal');
+    declare const gsap: any;
+    declare const ScrollTrigger: any;
 
-  // 2. VARIABLES DE ESTADO PARA SCROLL
-  let isWheelDown: boolean = false;
-  let startX: number = 0;
-  let scrollLeft: number = 0;
+    function initGaleriaVisuals() {
+        if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+            setTimeout(initGaleriaVisuals, 100);
+            return;
+        }
 
-  // Función para verificar el ancho de pantalla (Desktop vs Mobile)
-  const isDesktop = () => window.innerWidth > 1166;
+        gsap.registerPlugin(ScrollTrigger);
 
-  if (container && modal && modalImg) {
-    
-    /* --- LÓGICA DEL MODAL (Solo Desktop) --- */
+        const hermes = document.getElementById('hermes-footer');
+        const section = document.getElementById('galeria-section');
+        const container = document.getElementById('gallery-wrapper');
+        const modal = document.getElementById('image-modal') as HTMLDialogElement;
+        const modalImg = document.getElementById('modal-img') as HTMLImageElement;
+        const closeBtn = document.getElementById('close-modal');
 
-    container.addEventListener('click', (e) => {
-      // VALIDACIÓN: Si NO es desktop, salimos de la función y no hace nada
-      if (!isDesktop()) return;
+        // 1. Animación de entrada de Hermes (Elegante y lenta)
+        if (hermes && section) {
+            gsap.to(hermes, {
+                x: 0,
+                opacity: 1,
+                ease: "power2.out",
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top bottom",
+                    end: "top -50%",
+                    scrub: 2,
+                    invalidateOnRefresh: true,
+                }
+            });
+        }
 
-      const target = e.target as HTMLElement;
-      
-      // Si el click fue en una imagen
-      if (target.tagName === 'IMG') {
-        const clickedImg = target as HTMLImageElement;
-        
-        modalImg.src = clickedImg.src;
-        modalImg.alt = clickedImg.alt;
-        
-        modal.showModal(); 
-        document.body.style.overflow = 'hidden'; 
-      }
-    });
+        // 2. Lógica del Modal
+        if (container && modal && modalImg) {
+            container.addEventListener('click', (e) => {
+                if (window.innerWidth <= 1166) return;
+                const target = e.target as HTMLElement;
+                if (target.tagName === 'IMG') {
+                    modalImg.src = (target as HTMLImageElement).src;
+                    modal.showModal();
+                    document.body.style.overflow = 'hidden';
+                }
+            });
 
-    // Cerrar con el botón X
-    closeBtn?.addEventListener('click', () => {
-      modal.close();
-    });
+            closeBtn?.addEventListener('click', () => modal.close());
+            modal.addEventListener('close', () => document.body.style.overflow = '');
+        }
+    }
 
-    // Cerrar al hacer click en el fondo (transparente pero detectable)
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.close();
-      }
-    });
-
-    // Restaurar scroll al cerrar
-    modal.addEventListener('close', () => {
-      document.body.style.overflow = '';
-    });
-
-
-    /* --- LÓGICA DE SCROLL --- */
-
-    // 1. Scroll rápido con la rueda
-    container.addEventListener('wheel', (e: WheelEvent) => {
-      if (!isDesktop()) return; 
-      
-      e.preventDefault();
-      const speed = 3; 
-      container.scrollLeft += e.deltaY * speed;
-    }, { passive: false });
-
-    // 2. Movimiento con botón central presionado
-    container.addEventListener('mousedown', (e: MouseEvent) => {
-      if (e.button === 1 && isDesktop()) {
-        e.preventDefault();
-        isWheelDown = true;
-        container.style.cursor = 'all-scroll';
-        startX = e.pageX - container.offsetLeft;
-        scrollLeft = container.scrollLeft;
-      }
-    });
-
-    window.addEventListener('mouseup', () => {
-      isWheelDown = false;
-      if (container) container.style.cursor = 'ew-resize';
-    });
-
-    window.addEventListener('mousemove', (e: MouseEvent) => {
-      if (!isWheelDown || !container || !isDesktop()) return;
-      
-      const x = e.pageX - container.offsetLeft;
-      const walk = (x - startX) * 2; 
-      container.scrollLeft = scrollLeft - walk;
-    });
-
-    // Evitar menú de autoscroll nativo
-    container.addEventListener('auxclick', (e: MouseEvent) => {
-      if (e.button === 1 && isDesktop()) e.preventDefault();
-    });
-  }
+    initGaleriaVisuals();
+    document.addEventListener('astro:page-load', initGaleriaVisuals);
 </script>

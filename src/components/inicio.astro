@@ -1,0 +1,326 @@
+---
+import miVideo from '../assets/video/home.webm';
+---
+
+<div>
+    <header>
+        <nav>
+            <ul>
+                <li><span class="disabled">books</span></li>
+                <li><span class="disabled">eventos</span></li>
+                <li><a href="#galeria-section" id="btn-institucional">[institucional]</a></li>
+            </ul>
+			<ul>
+				<li>[contacto]</li>
+                <li>[instagram]</li>
+            </ul>
+        </nav>
+        
+        <div id="filters" style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;"></div>
+        
+        <h1 id="word">HERMES</h1>
+    </header>
+
+    <section class="video-section">
+        <video autoplay loop muted playsinline>
+            <source src={miVideo} type="video/webm" />
+            Tu navegador no soporta videos.
+        </video>
+    </section>
+</div>
+
+<style>
+    div {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    header {
+		display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center; /* Centra el Hermes verticalmente en su área */
+        min-height: 20dvh; /* Le damos un poco más de espacio que el 30dvh anterior */
+        width: 100%;
+        position: relative;
+        z-index: 10;
+        overflow: visible;
+        margin-bottom: -20px;
+    }
+	
+    h1 {
+		margin: 0;
+        display: flex;
+        line-height: 1;
+        font-size: 12vw;
+        user-select: none;
+        color: var(--color-hermes);
+        font-family: 'Akira', sans-serif;
+    }
+	h1 span{
+		font-size:5vw;
+	}
+    /* Tu CSS original */
+    header nav {
+		width: 100%;
+        display: flex;
+        margin-left: 5%;
+        justify-content: flex-start;
+    }
+    /* Usamos :global para que Astro no limite el CSS si las clases se crean via JS */
+    :global(.char-container) {
+        display: grid;
+        position: relative;
+    }
+
+    :global(.cell) {
+        position: relative;
+        overflow: hidden;
+    }
+
+    :global(.cell-inner) {
+		position: absolute;
+        pointer-events: none;
+        text-transform: uppercase;
+		color: var(--color-hermes);
+        font-family: 'Akira', sans-serif;
+    }
+    ul {
+        padding: 0;
+        margin-top: 20px;
+		margin-left:30px;
+        list-style: none;
+    }
+	ul li{
+		color:#98A2B3;
+        font-size: 16px;
+		font-weight: 600;
+        font-family: 'Playfair Display', serif;
+	}
+	ul li:hover{
+		cursor:pointer;
+		text-decoration:underline;
+	}
+	a{
+		all:unset;
+	}
+    ul li a{
+		color:#98A2B3;
+        font-size: 16px;
+		font-weight: 600;
+        font-family: 'Playfair Display', serif;
+    }
+	ul li a:hover{
+		cursor:pointer;
+		text-decoration:underline;
+	}
+   
+    li:has(.disabled), 
+    .disabled {
+        opacity: 0.4;
+        pointer-events: none !important; /* Esto mata cualquier interacción */
+        user-select: none !important;
+        cursor: default !important;
+    }
+    li:has(.disabled):hover span,
+    .disabled:hover {
+        text-decoration: none !important;
+        cursor: default !important;
+    }
+    .video-section {
+        width: 100%;
+        height: 80dvh;
+        margin-top: -100px;
+    }
+    .video-section video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover; /* Esto hace que el video llene el espacio sin deformarse */
+    }
+
+    .shake-click {
+    animation: shake-horizontal 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+
+    @keyframes shake-horizontal {
+        10%, 90% { transform: translate3d(-2px, 0, 0); }
+        20%, 80% { transform: translate3d(4px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+        40%, 60% { transform: translate3d(6px, 0, 0); }
+    }
+    @media screen and (max-width: 1000px) {
+        header {
+            /* Reseteamos el margen a 0 */
+            margin-bottom: 0 !important;
+            /* Opcional: reducimos un poco el alto en mobile si es necesario */
+            min-height: 25dvh; 
+        }
+
+        .video-section {
+            /* También reseteamos el margen negativo del video si lo tenías */
+            margin-top: 0 !important;
+            height: 50dvh; /* Altura más cómoda para celular */
+        }
+    }
+</style>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+<script is:inline>
+    function initMenuShake() {
+    const links = document.querySelectorAll('nav ul li');
+
+    links.forEach(link => {
+      link.addEventListener('click', function() {
+        // Añadimos la clase
+        this.classList.add('shake-click');
+
+        // La quitamos cuando termine (400ms es la duración en el CSS)
+        setTimeout(() => {
+          this.classList.remove('shake-click');
+        }, 400);
+      });
+    });
+  }
+
+  // Ejecutamos
+  initMenuShake();
+  // Si usas transiciones de Astro:
+  document.addEventListener('astro:page-load', initMenuShake);
+  
+    function initHermesAnimation() {
+        const wordContainer = document.getElementById('word');
+        const filtersContainer = document.getElementById('filters');
+        
+        if (!wordContainer) return;
+
+        // VERIFICACIÓN DE ANCHO: Solo procede si es mayor a 1000px
+        if (window.innerWidth <= 1000) {
+            // Si es menor, nos aseguramos de que el texto sea visible normalmente
+            // y no ejecutamos la lógica de fragmentación.
+            return; 
+        }
+
+        const originalText = wordContainer.innerText;
+        wordContainer.innerHTML = '';
+
+        const ROWS = 6;
+        const COLS = 4;
+
+        originalText.split('').forEach((char, charIdx) => {
+            const measurer = document.createElement('span');
+            // Asegúrate de que estos valores coincidan con tu CSS de escritorio
+            measurer.style.fontSize = '12vw'; 
+            measurer.style.fontFamily = 'Akira, sans-serif';
+            measurer.style.fontWeight = '900';
+            measurer.style.visibility = 'hidden';
+            measurer.style.position = 'absolute';
+            measurer.style.whiteSpace = 'pre';
+            measurer.innerText = char;
+            document.body.appendChild(measurer);
+            
+            const charWidth = measurer.offsetWidth;
+            const charHeight = measurer.offsetHeight;
+            document.body.removeChild(measurer);
+
+            const charDiv = document.createElement('div');
+            charDiv.className = 'char-container';
+            charDiv.style.width = `${charWidth}px`;
+            charDiv.style.height = `${charHeight}px`;
+            charDiv.style.gridTemplateColumns = `repeat(${COLS}, 1fr)`;
+            charDiv.style.gridTemplateRows = `repeat(${ROWS}, 1fr)`;
+
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    
+                    const inner = document.createElement('div');
+                    inner.className = 'cell-inner';
+                    inner.innerText = char;
+                    inner.style.width = `${charWidth}px`;
+                    inner.style.height = `${charHeight}px`;
+                    inner.style.left = `-${(c * charWidth) / COLS}px`;
+                    inner.style.top = `-${(r * charHeight) / ROWS}px`;
+
+                    const filterId = `f-${charIdx}-${r}-${c}`;
+                    cell.style.filter = `url(#${filterId})`;
+
+                    const filterHTML = `
+                        <svg style="position:absolute; width:0; height:0;">
+                            <filter id="${filterId}" x="-100%" y="-100%" width="300%" height="300%">
+                                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="${Math.random() * 100}" />
+                                <feDisplacementMap id="map-${filterId}" in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G" />
+                            </filter>
+                        </svg>`;
+                    filtersContainer.insertAdjacentHTML('beforeend', filterHTML);
+
+                    cell.appendChild(inner);
+                    charDiv.appendChild(cell);
+
+                    const map = document.getElementById(`map-${filterId}`);
+                    const proxy = { val: 0 };
+
+                    cell.addEventListener('mouseenter', () => {
+                        gsap.to(proxy, {
+                            val: 60,
+                            duration: 0.4,
+                            overwrite: true,
+                            onUpdate: () => map.setAttribute('scale', proxy.val),
+                            onComplete: () => {
+                                gsap.to(proxy, {
+                                    val: 0,
+                                    duration: 1,
+                                    ease: "elastic.out(1, 0.3)",
+                                    onUpdate: () => map.setAttribute('scale', proxy.val)
+                                });
+                            }
+                        });
+                    });
+                }
+            }
+            wordContainer.appendChild(charDiv);
+        });
+    }
+
+    // Ejecutar al cargar
+    initHermesAnimation();
+
+    // Opcional: Recargar si el usuario cambia el tamaño de la ventana
+    let windowWidth = window.innerWidth;
+    window.addEventListener('resize', () => {
+        if ((windowWidth > 1000 && window.innerWidth <= 1000) || 
+            (windowWidth <= 1000 && window.innerWidth > 1000)) {
+            window.location.reload(); // Recarga simple para limpiar/activar el efecto
+        }
+    });
+
+	// Registramos el plugin
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Animación para el texto HERMES (se mueve a la izquierda)
+    gsap.to("#word", {
+        // Se mueve a la izquierda el ancho total de la pantalla + un margen de seguridad
+        x: () => -(window.innerWidth), 
+        scrollTrigger: {
+            trigger: "header",
+            start: "top top",   // Empieza cuando el header está arriba
+            end: "bottom top",  // Termina cuando el header sale de visión
+            scrub: 1.5,         // Suavizado elegante
+            invalidateOnRefresh: true, // Crucial para que recalcule si el usuario estira la ventana
+        }
+    });
+
+    // Animación para la imagen (efecto parallax hacia arriba)
+    gsap.to(".video-section video", {
+            y: "10%", 
+            scrollTrigger: {
+                trigger: ".video-section",
+                start: "top bottom",
+                end: "bottom top",
+                scrub: true,
+            }
+        });
+</script>

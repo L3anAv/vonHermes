@@ -4,18 +4,49 @@
 		<meta charset="UTF-8" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📷</text></svg>">
+		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22></text></svg>">
 		<title>Hermes | Fotografía</title>
+
+    <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollToPlugin.min.js"></script>
+
 	</head>
 	<body>
 		<slot />
 	</body>
 </html>
-
 <style is:global>
-  *{
-    z-index:0;
-  }
+:root {
+    --color-hermes: #ba1d3d; /* CAMBIA EL COLOR AQUÍ (ej: blanco) */
+}
+  /* --- Estilos para Chrome, Safari y Edge --- */
+::-webkit-scrollbar {
+  width: 6px; /* Muy fino y minimalista */
+  height: 6px; /* Para scroll horizontal */
+}
+
+/* El fondo del carril del scroll */
+::-webkit-scrollbar-track {
+  background: #101828; /* El azul profundo de tu fondo */
+}
+
+/* La barra que se mueve (el "thumb") */
+::-webkit-scrollbar-thumb {
+  background: #2d3436; /* Un gris oscuro sutil para que no distraiga */
+  border-radius: 10px;
+}
+
+/* Cuando el usuario pasa el mouse por encima de la barra */
+::-webkit-scrollbar-thumb:hover {
+  background: #EA0E3A; /* Tu rojo vibrante: un toque de color solo al interactuar */
+}
+
+/* --- Estilos para Firefox --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2d3436 #101828;
+}
 	@font-face {
     font-family: 'Akira';
     src: url('../fonts/Akira.otf'), format('truetype');
@@ -33,91 +64,25 @@
 		all:unset;
 	}
 	body{
-		all:unset;
-		margin: 0;
-    overflow: hidden;
-		background:#f3f1e1;
-
-		display: grid;
-		min-height: 100dvh;
-		place-items: center;
-		grid-template-rows: auto 1fr auto;
-	}
-	/* Si el foco está en el CARRUSEL, desactivamos totalmente el CONTAINER */
-	div:has(.carrusel:hover) .container {
-		pointer-events: none !important;; /* El container deja de existir para el mouse */
-		opacity: 0;
+		all: unset;
+    margin: 0;
+    overflow-x: hidden; /* Bloquea el horizontal (importante para el texto que sale) */
+    overflow-y: auto;   /* PERMITE el vertical para que GSAP detecte el scroll */
+    background: #101828;
 	}
 
-	/* Si el mouse está en cualquier parte que NO sea el container, 
-	bloqueamos sus hijos para evitar disparos accidentales */
-	body:not(:has(.container:hover)) .img-card-container {
-		pointer-events: none !important;
-	}
+  /* Estilo para el símbolo dentro del H1 */
+    #word :global(.symbol) {
+        font-size: 0.3em; /* Lo hace mucho más pequeño que las letras */
+        align-self: flex-start; /* Lo posiciona arriba (como superíndice) */
+        margin-top: 1.5vw; /* Ajuste fino de altura */
+        font-family: sans-serif; /* A veces la fuente 'Akira' no tiene el glifo ® */
+    }
 
-	header nav, .container {
-		
-		/* 2. La animación solo dura 1s y luego DESAPARECE */
-		animation: fadeInContent 1s ease; 
-		animation-delay: 2s;
-		
-		/* 3. IMPORTANTE: Para que no se vea antes de los 2s */
-		animation-fill-mode: backwards;
-	}
-
-	@keyframes fadeInContent {
-		from { opacity: 0; }
-		to { opacity: 1; }
-	} 
-
-/* --- ESTILOS DEL CARRUSEL (Tus estilos originales corregidos) --- */
-.carrusel {
-  display: flex;
-  opacity: 0;
-  z-index: 0;
-  flex-direction: column;
-  transition: opacity 0.5s ease;
-}
-
-.carrusel:hover {
-  opacity: 1;
-  z-index: 100;
-}
-
-.scroll-container {
-  max-width: 100vw;
-  width: 100%;
-  gap: 20px;
-  padding: 40px;
-  display: flex;
-  overflow-x: auto;
-  cursor: ew-resize;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
-}
-
-.scroll-container::-webkit-scrollbar {
-  display: none;
-}
-
-.img-card {
-  flex: 0 0 auto;
-  width: 20%;
-  overflow: hidden;
-}
-
-.img-card img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  cursor: pointer;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.img-card:hover img {
-  transform: scale(1.05);
-}
+    /* Ajuste para que el contenedor del símbolo no sea gigante */
+    #word :global(.char-container:last-child) {
+        width: auto !important; /* Permite que el símbolo ocupe menos ancho */
+    }
 
 /* --- ESTILOS DEL MODAL (Correcciones solicitadas) --- */
 
@@ -186,37 +151,4 @@
 #image-modal[open] {
   animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes introHermes {
-  0% {
-    /* Estado inicial: Centrado y Gigante */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1.5);
-    z-index: 9999;
-    margin: 0;
-  }
-  70% {
-    /* Pausa un momento en el centro antes de moverse */
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(1.5);
-  }
-  100% {
-    /* Estado final: Su posición en el header */
-    position: relative; /* Ocupa su lugar en el flujo normal */
-    top: 0;
-    left: 0;
-    transform: translate(0, 0) scale(1);
-    z-index: 1;
-  }
-}
-
 </style>
