@@ -2,6 +2,13 @@
 import miVideo from '../assets/video/home.webm';
 ---
 
+<div id="loader">
+    <div class="loader-content">
+        <div id="loader-number">00</div>
+        <div class="loader-label">CARGANDO...</div>
+    </div>
+</div>
+
 <div>
     <header>
         <nav>
@@ -30,6 +37,34 @@ import miVideo from '../assets/video/home.webm';
 </div>
 
 <style>
+      #loader {
+        position: fixed; 
+        top: 0px; 
+        left: 0; 
+        width: 100%; 
+        display: flex;
+        z-index: 9999;
+        height: 100dvh;
+        flex-direction: column;
+        align-items: center; 
+        justify-content: center;
+        background-color: #050505; 
+        overflow: hidden;
+    }
+    .loader-content { text-align: center; }
+    #loader-number {
+        color: #C02424; 
+        font-family: 'Akira', 
+        sans-serif;
+        font-size: 22vw; 
+        line-height: 0.8;
+        margin: 0;
+    }
+    .loader-label {
+        color: #98A2B3; font-family: 'Playfair Display', serif;
+        font-size: 14px; letter-spacing: 12px; opacity: 0.7;
+    }
+    #main-wrapper { display: flex; flex-direction: column; min-height: 100vh; visibility: hidden; }
     div {
         display: flex;
         flex-direction: column;
@@ -169,58 +204,34 @@ import miVideo from '../assets/video/home.webm';
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
 <script is:inline>
+    // 1. Efecto Shake para el Menú
     function initMenuShake() {
-    const links = document.querySelectorAll('nav ul li');
+        const links = document.querySelectorAll('nav ul li');
+        links.forEach(link => {
+            link.addEventListener('click', function() {
+                this.classList.add('shake-click');
+                setTimeout(() => {
+                    this.classList.remove('shake-click');
+                }, 400);
+            });
+        });
+    }
 
-    links.forEach(link => {
-      link.addEventListener('click', function() {
-        // Añadimos la clase
-        this.classList.add('shake-click');
-
-        // La quitamos cuando termine (400ms es la duración en el CSS)
-        setTimeout(() => {
-          this.classList.remove('shake-click');
-        }, 400);
-      });
-    });
-  }
-
-  // Ejecutamos
-  initMenuShake();
-  // Si usas transiciones de Astro:
-  document.addEventListener('astro:page-load', initMenuShake);
-  
+    // 2. Fragmentación HERMES
     function initHermesAnimation() {
         const wordContainer = document.getElementById('word');
         const filtersContainer = document.getElementById('filters');
+        if (!wordContainer || window.innerWidth <= 1000) return;
         
-        if (!wordContainer) return;
-
-        // VERIFICACIÓN DE ANCHO: Solo procede si es mayor a 1000px
-        if (window.innerWidth <= 1000) {
-            // Si es menor, nos aseguramos de que el texto sea visible normalmente
-            // y no ejecutamos la lógica de fragmentación.
-            return; 
-        }
-
         const originalText = wordContainer.innerText;
         wordContainer.innerHTML = '';
-
-        const ROWS = 6;
-        const COLS = 4;
+        const ROWS = 6; const COLS = 4;
 
         originalText.split('').forEach((char, charIdx) => {
             const measurer = document.createElement('span');
-            // Asegúrate de que estos valores coincidan con tu CSS de escritorio
-            measurer.style.fontSize = '12vw'; 
-            measurer.style.fontFamily = 'Akira, sans-serif';
-            measurer.style.fontWeight = '900';
-            measurer.style.visibility = 'hidden';
-            measurer.style.position = 'absolute';
-            measurer.style.whiteSpace = 'pre';
+            measurer.style.cssText = `font-size: 12vw; font-family: 'Akira', sans-serif; font-weight: 900; visibility: hidden; position: absolute; white-space: pre;`;
             measurer.innerText = char;
             document.body.appendChild(measurer);
-            
             const charWidth = measurer.offsetWidth;
             const charHeight = measurer.offsetHeight;
             document.body.removeChild(measurer);
@@ -236,7 +247,6 @@ import miVideo from '../assets/video/home.webm';
                 for (let c = 0; c < COLS; c++) {
                     const cell = document.createElement('div');
                     cell.className = 'cell';
-                    
                     const inner = document.createElement('div');
                     inner.className = 'cell-inner';
                     inner.innerText = char;
@@ -247,37 +257,15 @@ import miVideo from '../assets/video/home.webm';
 
                     const filterId = `f-${charIdx}-${r}-${c}`;
                     cell.style.filter = `url(#${filterId})`;
-
-                    const filterHTML = `
-                        <svg style="position:absolute; width:0; height:0;">
-                            <filter id="${filterId}" x="-100%" y="-100%" width="300%" height="300%">
-                                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="${Math.random() * 100}" />
-                                <feDisplacementMap id="map-${filterId}" in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G" />
-                            </filter>
-                        </svg>`;
-                    filtersContainer.insertAdjacentHTML('beforeend', filterHTML);
-
+                    filtersContainer.insertAdjacentHTML('beforeend', `<svg style="position:absolute; width:0; height:0;"><filter id="${filterId}" x="-100%" y="-100%" width="300%" height="300%"><feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="1" seed="${Math.random() * 100}" /><feDisplacementMap id="map-${filterId}" in="SourceGraphic" scale="0" xChannelSelector="R" yChannelSelector="G" /></filter></svg>`);
+                    
                     cell.appendChild(inner);
                     charDiv.appendChild(cell);
 
                     const map = document.getElementById(`map-${filterId}`);
                     const proxy = { val: 0 };
-
                     cell.addEventListener('mouseenter', () => {
-                        gsap.to(proxy, {
-                            val: 60,
-                            duration: 0.4,
-                            overwrite: true,
-                            onUpdate: () => map.setAttribute('scale', proxy.val),
-                            onComplete: () => {
-                                gsap.to(proxy, {
-                                    val: 0,
-                                    duration: 1,
-                                    ease: "elastic.out(1, 0.3)",
-                                    onUpdate: () => map.setAttribute('scale', proxy.val)
-                                });
-                            }
-                        });
+                        gsap.to(proxy, { val: 60, duration: 0.4, overwrite: true, onUpdate: () => map.setAttribute('scale', proxy.val), onComplete: () => gsap.to(proxy, { val: 0, duration: 1, ease: "elastic.out(1, 0.3)", onUpdate: () => map.setAttribute('scale', proxy.val) }) });
                     });
                 }
             }
@@ -285,42 +273,56 @@ import miVideo from '../assets/video/home.webm';
         });
     }
 
-    // Ejecutar al cargar
-    initHermesAnimation();
+    // 3. Lógica de Inicio (Loader + GSAP)
+    function initSite() {
+        const loader = document.getElementById('loader');
+        const loaderNum = document.getElementById('loader-number');
+        const mainWrapper = document.getElementById('main-wrapper');
+        const progress = { value: 0 };
 
-    // Opcional: Recargar si el usuario cambia el tamaño de la ventana
-    let windowWidth = window.innerWidth;
-    window.addEventListener('resize', () => {
-        if ((windowWidth > 1000 && window.innerWidth <= 1000) || 
-            (windowWidth <= 1000 && window.innerWidth > 1000)) {
-            window.location.reload(); // Recarga simple para limpiar/activar el efecto
-        }
-    });
-
-	// Registramos el plugin
-    gsap.registerPlugin(ScrollTrigger);
-
-    // Animación para el texto HERMES (se mueve a la izquierda)
-    gsap.to("#word", {
-        // Se mueve a la izquierda el ancho total de la pantalla + un margen de seguridad
-        x: () => -(window.innerWidth), 
-        scrollTrigger: {
-            trigger: "header",
-            start: "top top",   // Empieza cuando el header está arriba
-            end: "bottom top",  // Termina cuando el header sale de visión
-            scrub: 1.5,         // Suavizado elegante
-            invalidateOnRefresh: true, // Crucial para que recalcule si el usuario estira la ventana
-        }
-    });
-
-    // Animación para la imagen (efecto parallax hacia arriba)
-    gsap.to(".video-section video", {
-            y: "10%", 
-            scrollTrigger: {
-                trigger: ".video-section",
-                start: "top bottom",
-                end: "bottom top",
-                scrub: true,
-            }
+        const tl = gsap.timeline({
+            onComplete: () => { loader.style.display = 'none'; }
         });
+
+        tl.to(progress, {
+            value: 100,
+            duration: 2.2,
+            ease: "power2.inOut",
+            onUpdate: () => {
+                loaderNum.innerText = Math.floor(progress.value).toString().padStart(2, '0');
+            }
+        })
+        .add(async () => {
+            if (document.fonts) await document.fonts.ready;
+            initHermesAnimation();
+            initMenuShake(); // Iniciamos el shake aquí
+            
+            // ScrollTriggers
+            gsap.registerPlugin(ScrollTrigger);
+            gsap.to("#word", {
+                x: () => -(window.innerWidth),
+                scrollTrigger: { trigger: "header", start: "top top", end: "bottom top", scrub: 1.5, invalidateOnRefresh: true }
+            });
+            gsap.to(".video-section video", {
+                y: "15%",
+                scrollTrigger: { trigger: ".video-section", start: "top bottom", end: "bottom top", scrub: true }
+            });
+
+            mainWrapper.style.visibility = 'visible';
+        })
+        .to(loader, {
+            opacity: 0,
+            duration: 0.8,
+            ease: "power2.inOut"
+        })
+        .from("header nav, #word, .video-section", {
+            opacity: 0,
+            y: 30,
+            duration: 1,
+            stagger: 0.1,
+            ease: "expo.out"
+        }, "-=0.4");
+    }
+
+    window.addEventListener('DOMContentLoaded', initSite);
 </script>
